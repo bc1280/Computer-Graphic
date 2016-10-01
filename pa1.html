@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Programming assignment #1 : Intro to HTML Canvas</title>
+    <!--
+        Author: Bill Chang
+        Date: September 12th, 2016
+    -->
+</head>
+<body>
+    <canvas id="myCanvas" width="1000" height="1000"></canvas>
+
+
+</body>
+<script>
+    window.onload = function(){
+
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+//Left Eye
+        ctx.beginPath();
+        ctx.lineTo(225,75);
+        ctx.lineTo(275,75);
+        ctx.arc(275, 75, 50, Math.PI*3/2, Math.PI);
+        ctx.stroke();
+        ctx.fill();
+        ctx.shadowBlur=10;
+        ctx.shadowOffsetY=-3;
+        ctx.shadowColor="brown";
+        ctx.arc(275, 75, 50, Math.PI, Math.PI*3/2);
+        ctx.stroke();
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowColor="black";
+
+//Right Eye
+        ctx.beginPath();
+        ctx.lineTo(475,75);
+        ctx.arc(475, 75, 50, Math.PI*3/2, Math.PI);
+        ctx.stroke();
+        ctx.fill();
+        ctx.shadowBlur=10;
+        ctx.shadowOffsetY=-3;
+        ctx.shadowColor="brown";
+        ctx.arc(475, 75, 50, Math.PI, Math.PI*3/2);
+        ctx.stroke();
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowColor="black";
+
+//Right Hand
+        ctx.beginPath();
+        ctx.arc(625, 100, 50, Math.PI*1.4, Math.PI*0.4);
+        ctx.fill();
+        ctx.stroke();
+
+//Left Hand
+        ctx.beginPath();
+        ctx.arc(145, 100, 50, Math.PI*1.4, Math.PI*0.4);
+        ctx.fill();
+        ctx.stroke();
+
+//Face
+        ctx.beginPath();
+        ctx.arc(375, 125, 170, Math.PI*7/6, Math.PI*1/6);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(375, 125, 170, Math.PI*5/6, Math.PI*7/6);
+        ctx.stroke();
+
+//Mouth
+        ctx.beginPath();
+        ctx.arc(375, 125, 25, Math.PI, Math.PI/2);
+        ctx.arc(375, 175, 25, Math.PI*3/2, Math.PI);
+        ctx.lineTo(350,125);
+        ctx.strokeStyle = "Black";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.fillStyle = "Red";
+        ctx.fill();
+
+    }
+</script>
+</html>
