@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Bill Chang">
+    <meta name="description" content="pa4">
+    <title>Programming Assignment #4 : A complete 3D viewing pipeline, plus visibility</title>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+<br>
+<label for="wireFrame">WireFrame</label>
+<input id="wireFrame" name="wf_or_not" type="checkbox" onclick="radioHandler()"/>
+<label for="sort">Sort</label>
+<input id="sort" name="sort_or_not" type="checkbox" onclick="radioHandler()"/>
+<br>
+<input id="speed_slider" type="range" min="-0.01" max="0.01" step=".002"/> speed
+<br>
+<input id="fov_slider" type="range" min="-3.14" max="3.14" step=".02"/> fov (available only in perspective)
+<br>
+<input id="x_slider" type="range" min="-4" max="4" step=".05"/> lookAtX
+<br>
+<input id="y_slider" type="range" min="-4" max="4" step=".05"/> lookAtY
+<br>
+<input id="z_slider" type="range" min="-8" max="-4" step=".05"/> lookAtZ
+<br>
+<input id="xRot_slider" type="range" min="-1.2" max="1.2" step=".02"/> lookFromX
+<br>
+<input id="yRot_slider" type="range" min="-1.2" max="1.2" step=".02"/> lookFromY
+<br>
+<input id="zRot_slider" type="range" min="-3.14" max="3.14" step=".02"/> lookFromZ
+
+<div id="button">
+    <label for="perspective">perspective</label>
+    <input id="perspective" name="p_or_r" type="radio" onclick="radioHandler()"/>
+    <label for="ortho">orthographic</label>
+    <input id="ortho" name="p_or_r" type="radio" onclick="radioHandler()"/>
+</div>
+
+<script src="http://graphics.cs.wisc.edu/JS/twgl-full.min.js"></script>
+<script src="Turntable.js"></script>
+<script src="Animate.js"></script>
+</body>
+</html>

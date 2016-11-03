@@ -1,0 +1,31 @@
+precision highp float;
+attribute vec3 position;
+attribute vec3 normal;
+uniform mat3 normalMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+varying vec3 fNormal;
+varying vec3 fPosition;
+uniform float time;
+varying vec3 uPos;
+
+
+vec2 Rotate(vec2 vec_in, float angle)
+{
+  vec2 vec_out;
+  vec_out.x=cos(angle)*vec_in.x-sin(angle)*vec_in.y;
+  vec_out.y=sin(angle)*vec_in.x+cos(angle)*vec_in.y;
+  return vec_out;
+}
+
+void main()
+{
+  uPos = position.xyz;
+  
+  uPos.yz = Rotate(uPos.yz,0.5*uPos.y*sin(10.0*time)); 
+  fNormal = normalize(normalMatrix * normal);
+  vec4 pos = modelViewMatrix * vec4(uPos, 1.0);
+  fPosition = pos.xyz;
+  gl_Position = projectionMatrix * pos;
+
+}
