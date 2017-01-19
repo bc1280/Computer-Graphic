@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Graphics town framework code by Mike Gleicher
+  -- written October, 2015
+  -->
+<head>
+    <meta charset="UTF-8">
+    <title>GraphicsTown JS 2015!</title>
+</head>
+<body>
+<!-- load this stuff first -->
+<script src="Libraries/twgl-full.js"></script>
+<script src="Libraries/panel.js"></script>
+<script src="Libraries/arcball.js"></script>
+<script src="grobject.js"></script>
+<script src="ExampleObjects/ground.js"></script>
+
+<!-- This is where we load the objects for the world -->
+<script src="ExampleObjects/simpleturntable.js"></script>
+<script src="ExampleObjects/scoreboard.js"></script>
+<script src="ExampleObjects/bird.js"></script>
+<script src="ExampleObjects/tbird.js"></script>
+<script src="ExampleObjects/skymirror.js"></script>
+
+<!-- I am adding the helicopter -->
+<!--script src="Helicopter/helicopter.js"></--script>
+
+<!-- This gets loaded LAST (actually, it probably doesn't have to) -->
+<script src="graphicstown.js"></script>
+</body>
+
+<!-- all of the shaders get stuck here in the HTML because
+  -- that's the only way I know to load them without either
+  -- sticking them in JavaScript strings, or using a web server
+  -->
+
+<script id="cube-vs" type="notjs">
+// specialized shader for the simple cube
+// we assume that the model matrix works as the normal
+//      matrix - this only is try if the model matrix
+//      it a rotate/translate
+//      (uniform scale is OK since we re-normalize)
+// color is solid
+// simple lighting
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+        outColor = cubecolor * diffuse;
+    }
+</script>
+<script id="cube-fs" type="notjs">
+// simple shader that does vertex coloring
+//  (e.g. the vertex shader figures the lighting
+// note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outColor;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+<script id="scoreboard-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    varying vec3 outColor;
+    varying vec3 fNormal;
+   // varying vec2 fTexCoord;
+    //attribute vec2 vTex;
+
+    uniform mat3 normalMatrix;
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+    varying vec3 outLightDir;
+    varying vec3 fPos;
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        fNormal = normalize(normalMatrix * vnormal);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        fPos =(view* model* vec4(vpos.xyz,1.0)).xyz;
+        float diffuse = 0.5 + .5*dot(normal, vec4(lightdir,0.0));
+        outLightDir = lightdir;
+        outColor = cubecolor * diffuse;
+       // fTexCoord = vTex;
+    }
+</script>
+<script id="scoreboard-fs" type="not-js">
+    precision highp float;
+    varying vec3 outColor;
+    varying vec3 outLightDir;
+    varying vec3 fPos;
+    varying vec3 fNormal;
+    const float specular_coeff  = 1.0;
+    const float specular_exp    = 12.0;
+    const vec3  light_color     = vec3(1.0, 1.0, 1.0);
+    void main(void) {
+        vec3 l = normalize(outLightDir);
+        vec3 n = normalize(fNormal);
+        vec3 e = normalize(-fPos);
+        vec3 h = normalize (e+l);
+
+        //vec4 texColor = texture2D(texSampler, fTexCoord);
+        vec3 specular_color = specular_coeff * pow(max(0.0,dot(n,h)),specular_exp) * light_color;
+        gl_FragColor = vec4(outColor + specular_color, 1.0);
+    }
+</script>
+<script id="rbt-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    attribute vec2 a_texcoord;
+
+    varying vec2 v_texcoord;
+
+    varying float outColor;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+
+    void main(void) {
+        gl_Position = proj * view * model* vec4(vpos, 1.0);
+        v_texcoord = a_texcoord;
+        vec4 normal = (vec4(vnormal,0.0));
+        float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+        outColor = diffuse;
+    }
+
+
+
+</script>
+<script id="rbt-fs" type="notjs">
+    precision highp float;
+    varying vec2 v_texcoord;
+    uniform sampler2D u_texture;
+    varying float outColor;
+    void main(void) {
+         gl_FragColor = outColor * texture2D(u_texture, v_texcoord);
+        //gl_FragColor = vec4(outColor, 1.0)+ texture2D(u_texture, v_texcoord);
+        //gl_FragColor = vec4(outColor, 1.0);
+    }
+
+
+
+
+
+</script>
+
+
+<!-- Special Ground Plane Shader - makes a boring
+  -- checkerboard
+  -->
+<script id="ground-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec2 a_texcoord;
+    attribute vec3 aNormal;
+
+    varying vec3 outPos;
+    varying vec2 v_texcoord;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+    varying vec3 tangent;
+    varying vec3 biNormal;
+    varying vec3 vNormal;
+    void main(void) {
+        vec3 c1 = cross(aNormal, vec3(0.0, 0.0, 1.0));
+        vec3 c2 = cross(aNormal, vec3(0.0, 1.0, 0.0));
+
+        if (length(c1)>length(c2))
+       {
+            tangent = c1;
+        }
+        else
+        {
+            tangent = c2;
+        }
+        tangent = normalize(tangent);
+        biNormal = normalize(cross(aNormal, tangent));
+
+        gl_Position = proj * view * vec4(vpos, 1.0);
+        outPos = vpos;
+        v_texcoord = a_texcoord;
+        vNormal = aNormal;
+    }
+
+</script>
+<script id="ground-fs" type="notjs">
+    // note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outPos;
+    uniform sampler2D color_texture;
+    varying vec2 v_texcoord;
+    varying vec3 tangent;
+    varying vec3 biNormal;
+    varying vec3 vNormal;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+    void main(void) {
+        float bm0, bmUp, bmRight;  // Samples from the bumpmap at three texels.
+        float bumpmapStrength = 5.0;
+        bm0 = texture2D( color_texture, v_texcoord ).r;
+        bmUp = texture2D( color_texture, v_texcoord + vec2(0.0, 1.0/512.0) ).r;
+        bmRight = texture2D( color_texture, v_texcoord + vec2(1.0/512.0, 0.0) ).r;
+        vec3 bumpVector = (bmRight - bm0)*tangent + (bmUp - bm0)*biNormal;
+        vec3 normal = normalize( vNormal );
+
+        normal += bumpmapStrength * bumpVector;
+        vec3 diffuse = abs(dot(normal,(lightdir))) * vec3(texture2D(color_texture, v_texcoord).rgb)*vec3(0.6,0.6,0.6);
+        gl_FragColor = vec4(diffuse,1.0);
+    }
+
+
+</script>
+<script id="skymirror-vs" type="notjs">
+	precision highp float;
+	attribute vec3 vpos;
+	attribute vec2 texPos;
+	varying vec2 outPos;
+
+	uniform mat4 model;
+	uniform mat4 view;
+	uniform mat4 proj;
+
+	void main() {
+		gl_Position = proj * view * model * vec4(vpos, 1.0);
+		outPos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0;
+	}
+
+</script>
+<script id="skymirror-fs" type="notjs">
+	precision highp float;
+	varying vec2 outPos;
+	uniform sampler2D uTexture;
+	void main() {
+		gl_FragColor = texture2D(uTexture, outPos);
+		gl_FragColor.rgb *= 2.0;
+	}
+</script>
+
+</html>
